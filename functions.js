@@ -51,23 +51,22 @@ const retrieveSenderUtil = (req) => {
 
     return getAsynckeys(key).then((re) => {
       if (re.length !== 0) {
+        var k = 0;
         ret = [];
         for (i = start.getDate(); i <= end.getDate(); i++) {
           let key =
             name + ":" + i + "" + start.getMonth() + "" + start.getFullYear();
           getAsync(key, 0, -1).then(async (re) => {
             if (re.length !== 0) {
-              for (j = 0; j < re.length; j++) client.rpush("cache", re[j]);
+              for (j = 0; j < re.length; j++) {
+                if (k < 2) ret.push(re[j]);
+                k = k + 1;
+                client.rpush("cache", re[j]);
+              }
             }
           });
         }
-        return getAsync("cache", counter * 2, counter * 2 + 1).then((re) => {
-          if (re.length !== 0) {
-            for (let k = 0; k < re.length; k++) ret.push(re[k]);
-            return ret;
-          }
-          return ret;
-        });
+        return ret;
       }
       return db.retrieveSender(req.payload).then((re) => {
         ret = [];
@@ -109,23 +108,22 @@ const retrieveReceiverUtil = (req) => {
 
     return getAsynckeys(key).then((re) => {
       if (re.length !== 0) {
+        var k = 0;
         ret = [];
         for (i = start.getDate(); i <= end.getDate(); i++) {
           let key =
             name + "1:" + i + "" + start.getMonth() + "" + start.getFullYear();
-          getAsync(key, 0, -1).then((re) => {
+          getAsync(key, 0, -1).then(async (re) => {
             if (re.length !== 0) {
-              for (j = 0; j < re.length; j++) client.rpush("cache1", re[j]);
+              for (j = 0; j < re.length; j++) {
+                if (k < 2) ret.push(re[j]);
+                k = k + 1;
+                client.rpush("cache1", re[j]);
+              }
             }
           });
         }
-        return getAsync("cache1", counter * 2, counter * 2 + 1).then((re) => {
-          if (re.length !== 0) {
-            for (let k = 0; k < re.length; k++) ret.push(re[k]);
-            return ret;
-          }
-          return ret;
-        });
+        return ret;
       }
       return db.retrieveReceiver(req.payload).then((re) => {
         ret = [];
