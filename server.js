@@ -1,4 +1,4 @@
-var functions = require("./functions.js");
+var functions = require("./routefunctions.js");
 const Hapi = require("@hapi/hapi");
 const Joi = require("@hapi/joi");
 
