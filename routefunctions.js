@@ -1,6 +1,5 @@
 var db = require("./db.js");
 
-var async = require("async");
 const redis = require("redis");
 const client = redis.createClient();
 const { promisify } = require("util");
@@ -8,23 +7,6 @@ client.on("error", function (error) {
   console.error(error);
 });
 
-var payloadQueue = async.queue(function (payload, callback) {
-  console.log(payload);
-  db.saveTodb(payload);
-  setTimeout(function () {
-    callback();
-  }, 3000);
-}, 2); //perform two tasks at a time
-
-payloadQueue.drain = function () {
-  console.log("All items have been processed");
-};
-
-const pushToQueue = (payload) => {
-  payloadQueue.push(payload, function () {
-    console.log("finished processing");
-  });
-};
 const retrieveSenderUtil = (req) => {
   var { name, start, end, counter, cached } = req.payload;
   const getAsynckeys = promisify(client.keys).bind(client);
@@ -138,36 +120,5 @@ const retrieveReceiverUtil = (req) => {
   //   })
   //   .catch(console.error);
 };
-const pushToCache = (req) => {
-  console.log(req.payload);
-  var date1 = new Date();
-  date2 = new Date(date1.getTime() - 7 * 1000 * 3600 * 24);
-  date2 = date2.getDate() + "" + date2.getMonth() + "" + date2.getFullYear();
-  console.log(date2);
-
-  const getAsync = promisify(client.keys).bind(client);
-  getAsync(`${req.payload.sender}:${date2}`).then((re) => {
-    // console.log(re);
-    if (re.length !== 0) client.del(re[0]);
-  });
-  client.rpush(
-    `${
-      req.payload.sender
-    }:${date1.getDate()}${date1.getMonth()}${date1.getFullYear()}`,
-    req.payload.message
-  );
-  getAsync(`${req.payload.receiver}1:${date2}`).then((re) => {
-    // console.log(re);
-    if (re.length !== 0) client.del(re[0]);
-  });
-  client.rpush(
-    `${
-      req.payload.receiver
-    }1:${date1.getDate()}${date1.getMonth()}${date1.getFullYear()}`,
-    req.payload.message
-  );
-};
-exports.pushToQueue = pushToQueue;
 exports.retrieveSenderUtil = retrieveSenderUtil;
 exports.retrieveReceiverUtil = retrieveReceiverUtil;
-exports.pushToCache = pushToCache;
